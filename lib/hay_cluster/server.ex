@@ -26,7 +26,7 @@ defmodule HayCluster.Server do
   end
 
   @impl GenServer
-  def handle_call({:start_nodes, names, _opts}, _from, state) do
+  def handle_call({:start_nodes, names, opts}, _from, state) do
     mapping =
       names
       |> Enum.map(fn name ->
@@ -39,13 +39,13 @@ defmodule HayCluster.Server do
       end)
       |> Enum.into(%{}, fn {:ok, pid, name} -> {name, pid} end)
 
-    nodes =
-      mapping
-      |> Map.keys()
-      |> tap(&setup_nodes/1)
-      |> tap(&transfer_environment/1)
-      |> tap(&start_applications/1)
-      |> tap(&add_coverage/1)
+    nodes = Map.keys(mapping)
+
+    setup_nodes(nodes)
+    transfer_environment(nodes, opts)
+    start_applications(nodes, opts)
+    require_files(nodes, opts)
+    add_coverage(nodes)
 
     {:reply, nodes, Map.merge(state, mapping)}
   end
@@ -68,21 +68,38 @@ defmodule HayCluster.Server do
     :erpc.multicall(nodes, :global, :sync, [])
   end
 
-  defp transfer_environment(nodes) do
+  defp transfer_environment(nodes, opts) do
+    all_env_custom = Keyword.get(opts, :environment, [])
+
     Application.loaded_applications()
     |> Enum.map(fn {name, _descr, _version} -> name end)
     |> Enum.each(fn app ->
+      env_custom = Keyword.get(all_env_custom, app, [])
+
       app
       |> Application.get_all_env()
+      |> Keyword.merge(env_custom)
       |> Enum.each(fn {key, value} ->
         :erpc.multicall(nodes, Application, :put_env, [app, key, value])
       end)
     end)
   end
 
-  defp start_applications(nodes) do
-    Enum.each(Application.started_applications(), fn {name, _descr, _version} ->
-      :erpc.multicall(nodes, Application, :ensure_all_started, [name])
+  defp start_applications(nodes, opts) do
+    opts
+    |> Keyword.get_lazy(:applications, fn ->
+      Enum.map(Application.started_applications(), fn {name, _descr, _version} -> name end)
+    end)
+    |> Enum.each(fn app_name ->
+      :erpc.multicall(nodes, Application, :ensure_all_started, [app_name])
+    end)
+  end
+
+  defp require_files(nodes, opts) do
+    opts
+    |> Keyword.get(:files, [])
+    |> Enum.each(fn file ->
+      :erpc.multicall(nodes, Code, :require_file, [file])
     end)
   end
 
