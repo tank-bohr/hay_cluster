@@ -1,18 +1,14 @@
 defmodule HayCluster do
-  @moduledoc """
-  Documentation for `HayCluster`.
-  """
+  @moduledoc false
 
-  @doc """
-  Hello world.
+  alias HayCluster.Server
 
-  ## Examples
+  @spec start_distribution() :: {:ok, pid()}
+  def start_distribution(), do: :net_kernel.start([:"manager@127.0.0.1"])
 
-      iex> HayCluster.hello()
-      :world
+  @spec start_nodes(String.t(), pos_integer(), Keyword.t()) :: [atom()]
+  def start_nodes(prefix, amount, opts \\ []), do: Server.start_nodes(prefix, amount, opts)
 
-  """
-  def hello do
-    :world
-  end
+  @spec stop_nodes([atom()]) :: :ok
+  def stop_nodes(nodes), do: Server.stop_nodes(nodes)
 end
