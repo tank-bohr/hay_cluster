@@ -2,7 +2,7 @@ defmodule HayCluster.MixProject do
   use Mix.Project
 
   @name "HayCluster"
-  @version "1.0.0"
+  @version "1.0.1"
   @repo_url "https://github.com/tank-bohr/hay_cluster"
 
   def project do
