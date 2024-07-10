@@ -24,13 +24,14 @@ defmodule HayClusterTest do
   end
 
   test "load selected applications" do
-    nodes = HayCluster.start_nodes(:child, 1, [
-      applications: [
-        :hay_cluster,
-        :ex_unit,
-        :no_real_app
-      ]
-    ])
+    nodes =
+      HayCluster.start_nodes(:child, 1,
+        applications: [
+          :hay_cluster,
+          :ex_unit,
+          :no_real_app
+        ]
+      )
 
     [node1] = nodes
 
@@ -41,17 +42,18 @@ defmodule HayClusterTest do
 
     assert :hay_cluster in node1_apps
     assert :ex_unit in node1_apps
-    assert (:no_real_app in node1_apps) == false
+    assert :no_real_app in node1_apps == false
 
     :ok = HayCluster.stop_nodes(nodes)
   end
 
   test "spawns tasks directly on child nodes" do
-    nodes = HayCluster.start_nodes(:spawn, 3, [
-      files: [
-        __ENV__.file
-      ]
-    ])
+    nodes =
+      HayCluster.start_nodes(:spawn, 3,
+        files: [
+          __ENV__.file
+        ]
+      )
 
     [node1, node2, node3] = nodes
 
@@ -79,17 +81,19 @@ defmodule HayClusterTest do
   end
 
   test "overriding environment variables on child nodes" do
-    [node1] = HayCluster.start_nodes(:cluster_var_a, 1, [
-      environment: [
-        hay_cluster: [override: "test1"]
-      ]
-    ])
+    [node1] =
+      HayCluster.start_nodes(:cluster_var_a, 1,
+        environment: [
+          hay_cluster: [override: "test1"]
+        ]
+      )
 
-    [node2] = HayCluster.start_nodes(:cluster_var_b, 1, [
-      environment: [
-        hay_cluster: [override: "test2"]
-      ]
-    ])
+    [node2] =
+      HayCluster.start_nodes(:cluster_var_b, 1,
+        environment: [
+          hay_cluster: [override: "test2"]
+        ]
+      )
 
     [node3] = HayCluster.start_nodes(:cluster_no_env, 1)
 

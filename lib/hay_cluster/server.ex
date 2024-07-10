@@ -10,7 +10,7 @@ defmodule HayCluster.Server do
     end
   end
 
-  @spec start_nodes(String.t(), pos_integer(), Keyword.t()) :: [atom()]
+  @spec start_nodes(atom(), pos_integer(), Keyword.t()) :: [atom()]
   def start_nodes(prefix, amount, opts) do
     names = Enum.map(1..amount, fn _idx -> :peer.random_name(prefix) end)
     GenServer.call(@this, {:start_nodes, names, opts})
@@ -33,7 +33,7 @@ defmodule HayCluster.Server do
         :peer.start(%{
           name: name,
           longnames: true,
-          host: '127.0.0.1',
+          host: ~c"127.0.0.1",
           peer_down: :continue
         })
       end)
@@ -103,7 +103,7 @@ defmodule HayCluster.Server do
     end)
   end
 
-  def add_coverage(nodes) do
+  defp add_coverage(nodes) do
     case Process.whereis(:cover_server) do
       nil ->
         {:ok, []}
