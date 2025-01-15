@@ -13,7 +13,7 @@ Highly inspired by [LocalCluster](https://github.com/whitfin/local-cluster).
 ```elixir
 defp deps do
   [
-    {:hay_cluster, "~> 0.1.0"}
+    {:hay_cluster, "~> 1.0", only: :test}
   ]
 end
 ```
